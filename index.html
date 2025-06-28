@@ -206,12 +206,12 @@
                 <table class="w-full">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Project & Assignee</th>
-                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status & Progress</th>
-                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Timeline</th>
-                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Bottleneck</th>
-                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Next Step</th>
-                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-1/6">Project & Assignee</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-1/6">Status & Progress</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-1/6">Timeline</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-1/4">Bottleneck</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-1/4">Next Step</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-20">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="projectsTableBody" class="bg-white divide-y divide-gray-100">
@@ -347,6 +347,12 @@
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Progress (%)</label>
                         <input type="number" id="projectProgress" min="0" max="100" value="0" 
                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Days in Pipeline</label>
+                        <input type="number" id="projectDaysInPipeline" min="0" value="0" 
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                               title="How many days this project has been active">
                     </div>
                     <div class="md:col-span-2">
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Current Bottleneck</label>
@@ -565,17 +571,17 @@
                             <div class="text-xs text-gray-400">${project.daysInPipeline} days in pipeline</div>
                         </td>
                         <td class="px-6 py-4">
-                            <div class="text-sm text-gray-700 max-w-xs">${project.nextStep}</div>
+                            <div class="text-sm text-gray-700 max-w-xs break-words">${project.nextStep}</div>
                         </td>
-                        <td class="px-6 py-4">
-                            <div class="flex space-x-3">
+                        <td class="px-6 py-4 w-20">
+                            <div class="flex justify-center space-x-2">
                                 <button onclick="editProject(${project.id})" 
-                                        class="text-blue-600 hover:text-blue-800 transition-colors p-1 rounded hover:bg-blue-50" 
+                                        class="text-blue-600 hover:text-blue-800 transition-colors p-2 rounded hover:bg-blue-50" 
                                         title="Edit project">
                                     <span class="icon">✏️</span>
                                 </button>
                                 <button onclick="deleteProject(${project.id})" 
-                                        class="text-red-600 hover:text-red-800 transition-colors p-1 rounded hover:bg-red-50" 
+                                        class="text-red-600 hover:text-red-800 transition-colors p-2 rounded hover:bg-red-50" 
                                         title="Delete project">
                                     <span class="icon">🗑️</span>
                                 </button>
@@ -692,6 +698,7 @@
             document.getElementById('projectPriority').value = 'Medium';
             document.getElementById('projectTargetDate').value = '';
             document.getElementById('projectProgress').value = '0';
+            document.getElementById('projectDaysInPipeline').value = '0';
             document.getElementById('projectBottleneck').value = '';
             document.getElementById('projectNextStep').value = '';
         }
@@ -703,6 +710,7 @@
             document.getElementById('projectPriority').value = project.priority;
             document.getElementById('projectTargetDate').value = project.targetDate;
             document.getElementById('projectProgress').value = project.progress;
+            document.getElementById('projectDaysInPipeline').value = project.daysInPipeline || 0;
             document.getElementById('projectBottleneck').value = project.bottleneck || '';
             document.getElementById('projectNextStep').value = project.nextStep;
         }
@@ -730,6 +738,7 @@
                 priority: document.getElementById('projectPriority').value,
                 targetDate: document.getElementById('projectTargetDate').value,
                 progress: parseInt(document.getElementById('projectProgress').value) || 0,
+                daysInPipeline: parseInt(document.getElementById('projectDaysInPipeline').value) || 0,
                 bottleneck: document.getElementById('projectBottleneck').value.trim(),
                 nextStep: document.getElementById('projectNextStep').value.trim()
             };
@@ -752,24 +761,30 @@
                 }
             }
 
-            // Close modal first
-            closeProjectModal();
-
             if (editingProject) {
-                // Update existing project
-                const index = projects.findIndex(p => p.id === editingProject.id);
+                // Update existing project - use string comparison for ID
+                const index = projects.findIndex(p => String(p.id) === String(editingProject.id));
                 if (index !== -1) {
                     projects[index] = { ...projects[index], ...formData };
+                    console.log('Updated project at index:', index, 'with ID:', editingProject.id);
+                } else {
+                    console.error('Could not find project to update with ID:', editingProject.id);
+                    alert('Error: Could not find project to update');
+                    return;
                 }
             } else {
                 // Add new project
                 const newProject = {
                     ...formData,
                     id: Date.now(),
-                    daysInPipeline: 0
+                    daysInPipeline: formData.daysInPipeline || 0
                 };
                 projects.push(newProject);
+                console.log('Added new project with ID:', newProject.id);
             }
+
+            // Close modal first
+            closeProjectModal();
 
             renderProjects();
             updateStats();
@@ -786,16 +801,20 @@
 
         // Project actions
         function editProject(id) {
-            const project = projects.find(p => p.id === id);
+            const project = projects.find(p => String(p.id) === String(id));
             if (project) {
+                console.log('Editing project:', project.name, 'with ID:', id);
                 openEditProject(project);
+            } else {
+                console.error('Could not find project with ID:', id);
+                alert('Error: Could not find project to edit');
             }
         }
 
         function deleteProject(id) {
-            const project = projects.find(p => p.id === id);
+            const project = projects.find(p => String(p.id) === String(id));
             if (project && confirm(`Are you sure you want to delete "${project.name}"?`)) {
-                projects = projects.filter(p => p.id !== id);
+                projects = projects.filter(p => String(p.id) !== String(id));
                 renderProjects();
                 updateStats();
 
@@ -816,7 +835,7 @@
             hideError();
 
             try {
-                const response = await fetch(`https://api.airtable.com/v0/${airtableConfig.baseId}/${airtableConfig.tableName}`, {
+                const response = await fetch(`https://api.airtable.com/v0/${airtableConfig.baseId}/${encodeURIComponent(airtableConfig.tableName)}`, {
                     headers: {
                         'Authorization': `Bearer ${airtableConfig.apiKey}`,
                         'Content-Type': 'application/json'
@@ -824,10 +843,15 @@
                 });
 
                 if (!response.ok) {
-                    throw new Error(`Airtable API error: ${response.status}`);
+                    const errorData = await response.text();
+                    throw new Error(`Airtable API error: ${response.status} - ${errorData}`);
                 }
 
                 const data = await response.json();
+                
+                if (!data.records || !Array.isArray(data.records)) {
+                    throw new Error('Invalid response format from Airtable');
+                }
                 
                 projects = data.records.map(record => ({
                     id: record.id,
@@ -838,8 +862,8 @@
                     bottleneck: record.fields.Bottleneck || '',
                     nextStep: record.fields['Next Step'] || '',
                     assignee: record.fields.Assignee || '',
-                    progress: record.fields.Progress || 0,
-                    daysInPipeline: record.fields['Days in Pipeline'] || 0
+                    progress: Number(record.fields.Progress) || 0,
+                    daysInPipeline: Number(record.fields['Days in Pipeline']) || 0
                 }));
 
                 renderProjects();
@@ -850,6 +874,7 @@
                 document.getElementById('lastSync').style.display = 'inline';
 
             } catch (err) {
+                console.error('Sync error:', err);
                 showError(`Failed to sync with Airtable: ${err.message}`);
             } finally {
                 isLoading = false;
@@ -878,7 +903,8 @@
                             'Next Step': projectData.nextStep,
                             'Assignee': projectData.assignee,
                             'Progress': projectData.progress,
-                            'Days in Pipeline': 0
+                            'Days in Pipeline': projectData.daysInPipeline,
+                            'Days in Pipeline': projectData.daysInPipeline
                         }
                     })
                 });
@@ -932,7 +958,7 @@
             if (!airtableConfig.baseId || !airtableConfig.apiKey) return;
 
             try {
-                const response = await fetch(`https://api.airtable.com/v0/${airtableConfig.baseId}/${airtableConfig.tableName}/${projectId}`, {
+                const response = await fetch(`https://api.airtable.com/v0/${airtableConfig.baseId}/${encodeURIComponent(airtableConfig.tableName)}/${encodeURIComponent(projectId)}`, {
                     method: 'DELETE',
                     headers: {
                         'Authorization': `Bearer ${airtableConfig.apiKey}`
@@ -940,18 +966,25 @@
                 });
 
                 if (!response.ok) {
-                    throw new Error(`Failed to delete project: ${response.status}`);
+                    const errorData = await response.text();
+                    throw new Error(`Failed to delete project: ${response.status} - ${errorData}`);
                 }
 
             } catch (err) {
+                console.error('Airtable delete error:', err);
                 showError(`Failed to delete project from Airtable: ${err.message}`);
             }
         }
 
         // Error handling
         function showError(message) {
+            console.error('Dashboard error:', message);
             document.getElementById('errorMessage').textContent = message;
             document.getElementById('errorAlert').style.display = 'block';
+            // Auto-hide error after 10 seconds
+            setTimeout(() => {
+                hideError();
+            }, 10000);
         }
 
         function hideError() {
