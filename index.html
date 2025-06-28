@@ -607,6 +607,9 @@
                             <div class="text-xs text-gray-400">${project.daysInPipeline} days in pipeline</div>
                         </td>
                         <td class="px-6 py-4">
+                            <div class="text-sm text-gray-700 max-w-xs break-words">${project.bottleneck || 'No current bottlenecks'}</div>
+                        </td>
+                        <td class="px-6 py-4">
                             <div class="text-sm text-gray-700 max-w-xs break-words">${project.nextStep}</div>
                         </td>
                         <td class="px-6 py-4 w-20">
@@ -946,7 +949,6 @@
                             'Assignee': projectData.assignee,
                             'Progress': projectData.progress,
                             'Start Date': projectData.startDate,
-                            'Days in Pipeline': projectData.daysInPipeline,
                             'Days in Pipeline': projectData.daysInPipeline
                         }
                     })
@@ -983,7 +985,9 @@
                             'Bottleneck': projectData.bottleneck,
                             'Next Step': projectData.nextStep,
                             'Assignee': projectData.assignee,
-                            'Progress': projectData.progress
+                            'Progress': projectData.progress,
+                            'Start Date': projectData.startDate,
+                            'Days in Pipeline': projectData.daysInPipeline
                         }
                     })
                 });
@@ -1038,7 +1042,4 @@
         document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
-</html>-w-xs">${project.bottleneck || 'No current bottlenecks'}</div>
-                        </td>
-                        <td class="px-6 py-4">
-                            <div class="text-sm text-gray-700 max 
+</html>
