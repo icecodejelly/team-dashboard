@@ -472,6 +472,18 @@
             document.getElementById('projectModal').addEventListener('click', function(e) {
                 if (e.target === this) closeProjectModal();
             });
+
+            // Close modals with Escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    if (document.getElementById('settingsModal').classList.contains('active')) {
+                        closeSettings();
+                    }
+                    if (document.getElementById('projectModal').classList.contains('active')) {
+                        closeProjectModal();
+                    }
+                }
+            });
         }
 
         // Calculate days to target date
@@ -696,14 +708,14 @@
 
         function saveProject() {
             const formData = {
-                name: document.getElementById('projectName').value,
-                assignee: document.getElementById('projectAssignee').value,
+                name: document.getElementById('projectName').value.trim(),
+                assignee: document.getElementById('projectAssignee').value.trim(),
                 status: document.getElementById('projectStatus').value,
                 priority: document.getElementById('projectPriority').value,
                 targetDate: document.getElementById('projectTargetDate').value,
                 progress: parseInt(document.getElementById('projectProgress').value) || 0,
-                bottleneck: document.getElementById('projectBottleneck').value,
-                nextStep: document.getElementById('projectNextStep').value
+                bottleneck: document.getElementById('projectBottleneck').value.trim(),
+                nextStep: document.getElementById('projectNextStep').value.trim()
             };
 
             // Validate required fields
@@ -711,6 +723,9 @@
                 alert('Please fill in all required fields');
                 return;
             }
+
+            // Close modal first
+            closeProjectModal();
 
             if (editingProject) {
                 // Update existing project
@@ -730,7 +745,6 @@
 
             renderProjects();
             updateStats();
-            closeProjectModal();
 
             // If connected to Airtable, sync the changes
             if (airtableConfig.baseId && airtableConfig.apiKey) {
