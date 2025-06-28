@@ -5,17 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Creative Team Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    animation: {
-                        'spin': 'spin 1s linear infinite',
-                    }
-                }
-            }
-        }
-    </script>
     <style>
         body { 
             margin: 0; 
@@ -391,6 +380,10 @@
 
         // Initialize the dashboard
         function init() {
+            // Ensure modals start closed
+            document.getElementById('settingsModal').classList.remove('active');
+            document.getElementById('projectModal').classList.remove('active');
+            
             loadDemoData();
             loadAirtableConfig();
             setupEventListeners();
