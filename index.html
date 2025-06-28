@@ -15,10 +15,10 @@
             transition: width 0.3s ease-in-out;
         }
         .modal {
-            display: none;
+            display: none !important;
         }
         .modal.active {
-            display: flex;
+            display: flex !important;
         }
         .card-hover:hover {
             transform: translateY(-1px);
@@ -245,7 +245,7 @@
     </div>
 
     <!-- Settings Modal -->
-    <div id="settingsModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div id="settingsModal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50 p-4" style="display: none;">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-screen overflow-y-auto">
             <div class="p-8">
                 <h3 class="text-2xl font-bold text-gray-900 mb-6">Airtable Configuration</h3>
@@ -303,7 +303,7 @@
     </div>
 
     <!-- Add/Edit Project Modal -->
-    <div id="projectModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div id="projectModal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50 p-4" style="display: none;">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-screen overflow-y-auto">
             <div class="p-8">
                 <h3 id="projectModalTitle" class="text-2xl font-bold text-gray-900 mb-6">Add New Project</h3>
@@ -380,9 +380,14 @@
 
         // Initialize the dashboard
         function init() {
-            // Ensure modals start closed
-            document.getElementById('settingsModal').classList.remove('active');
-            document.getElementById('projectModal').classList.remove('active');
+            // Ensure modals start closed with multiple methods
+            const settingsModal = document.getElementById('settingsModal');
+            const projectModal = document.getElementById('projectModal');
+            
+            settingsModal.classList.remove('active');
+            settingsModal.style.display = 'none';
+            projectModal.classList.remove('active');
+            projectModal.style.display = 'none';
             
             loadDemoData();
             loadAirtableConfig();
@@ -460,15 +465,22 @@
 
             // Close modals when clicking outside
             document.getElementById('settingsModal').addEventListener('click', function(e) {
-                if (e.target === this) closeSettings();
+                if (e.target === this) {
+                    e.preventDefault();
+                    closeSettings();
+                }
             });
             document.getElementById('projectModal').addEventListener('click', function(e) {
-                if (e.target === this) closeProjectModal();
+                if (e.target === this) {
+                    e.preventDefault();
+                    closeProjectModal();
+                }
             });
 
             // Close modals with Escape key
             document.addEventListener('keydown', function(e) {
                 if (e.key === 'Escape') {
+                    e.preventDefault();
                     if (document.getElementById('settingsModal').classList.contains('active')) {
                         closeSettings();
                     }
@@ -634,11 +646,15 @@
             document.getElementById('baseIdInput').value = airtableConfig.baseId;
             document.getElementById('tableNameInput').value = airtableConfig.tableName;
             document.getElementById('apiKeyInput').value = airtableConfig.apiKey;
-            document.getElementById('settingsModal').classList.add('active');
+            const modal = document.getElementById('settingsModal');
+            modal.style.display = 'flex';
+            modal.classList.add('active');
         }
 
         function closeSettings() {
-            document.getElementById('settingsModal').classList.remove('active');
+            const modal = document.getElementById('settingsModal');
+            modal.classList.remove('active');
+            modal.style.display = 'none';
         }
 
         function openAddProject() {
@@ -646,7 +662,9 @@
             document.getElementById('projectModalTitle').textContent = 'Add New Project';
             document.getElementById('saveProjectBtn').textContent = 'Add Project';
             clearProjectForm();
-            document.getElementById('projectModal').classList.add('active');
+            const modal = document.getElementById('projectModal');
+            modal.style.display = 'flex';
+            modal.classList.add('active');
         }
 
         function openEditProject(project) {
@@ -654,12 +672,17 @@
             document.getElementById('projectModalTitle').textContent = 'Edit Project';
             document.getElementById('saveProjectBtn').textContent = 'Update Project';
             fillProjectForm(project);
-            document.getElementById('projectModal').classList.add('active');
+            const modal = document.getElementById('projectModal');
+            modal.style.display = 'flex';
+            modal.classList.add('active');
         }
 
         function closeProjectModal() {
-            document.getElementById('projectModal').classList.remove('active');
+            const modal = document.getElementById('projectModal');
+            modal.classList.remove('active');
+            modal.style.display = 'none';
             editingProject = null;
+            clearProjectForm();
         }
 
         function clearProjectForm() {
@@ -713,8 +736,20 @@
 
             // Validate required fields
             if (!formData.name || !formData.assignee || !formData.targetDate || !formData.nextStep) {
-                alert('Please fill in all required fields');
+                alert('Please fill in all required fields:\n- Project Name\n- Assignee\n- Target Date\n- Next Step');
                 return;
+            }
+
+            // Validate target date is not in the past
+            const today = new Date();
+            const targetDate = new Date(formData.targetDate);
+            today.setHours(0, 0, 0, 0);
+            targetDate.setHours(0, 0, 0, 0);
+            
+            if (targetDate < today) {
+                if (!confirm('Target date is in the past. Do you want to continue?')) {
+                    return;
+                }
             }
 
             // Close modal first
